@@ -101,7 +101,6 @@ public class NewsArticles extends AppCompatActivity {
         newsList.setAdapter(new RecyclerView.Adapter() {
 
 
-
             @Override
             public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
                 return null;
