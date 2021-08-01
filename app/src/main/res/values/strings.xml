@@ -1,4 +1,4 @@
 <resources>
     <string name="app_name">FinalProject</string>
-    <string name="load-button">Load</string>
+    <string name="loadbutton">Load</string>
 </resources>

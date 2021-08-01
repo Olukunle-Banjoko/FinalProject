@@ -1,7 +1,8 @@
 package algonquin.cst2335.finalproject;
 
 import android.app.AlertDialog;
-import android.media.Image;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -9,6 +10,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 
@@ -18,21 +20,18 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.snackbar.Snackbar;
 
-import org.json.JSONException;
-import org.json.JSONObject;
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserException;
+import org.xmlpull.v1.XmlPullParserFactory;
 
 import java.io.BufferedInputStream;
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
-import java.util.stream.Collectors;
 
 public class NewsArticles extends AppCompatActivity {
     ArrayList<newsFeed> news = new ArrayList<>();
@@ -41,81 +40,125 @@ public class NewsArticles extends AppCompatActivity {
     private String stringURL;
     RecyclerView newsList;
 
-
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        stringURL ="http://www.goal.com/en/feeds/news?fmt=rss";
-
         setContentView(R.layout.newslayout);
-
-        //--------------
-
-        String newsTitle1="Olympic soccer standings 2021";
-        String newsDate ="21-Jul-2021";
-        ImageView newsImage = findViewById(R.id.newsimage);
 
         Button save = findViewById(R.id.savebutton);
         Button load = findViewById(R.id.loadbutton);
         RecyclerView newsList = findViewById(R.id.myrecycler);
 
-        newsList.setAdapter(adt);
+        load.setOnClickListener( (click) ->{
 
-
-        newsList.setLayoutManager(new LinearLayoutManager(this));
-
-
-        //newsFeed thisNews = new newsFeed(newsTitle1 ,newsDate,newsImage);
-        newsFeed thisNews = new newsFeed(newsTitle1 ,newsDate,newsImage);
-        news.add( thisNews );
-        adt.notifyItemInserted(news.size()-1);
-
-        //-------------
-
+        //---Getting data from news feed
         Executor newThread = Executors.newSingleThreadExecutor();
-        newThread.execute( () ->{
+
+        newThread.execute( () -> {
             try{
+                stringURL ="https://www.goal.com/en/feeds/news?fmt=rss&mode=xml";
+
                 URL url = new URL(stringURL);
                 HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
                 InputStream in = new BufferedInputStream(urlConnection.getInputStream());
 
-                String text = (new BufferedReader(
-                        new InputStreamReader(in, StandardCharsets.UTF_8)))
-                        .lines()
-                        .collect(Collectors.joining("\n"));
+                XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
+                factory.setNamespaceAware(false);
+                XmlPullParser xpp = factory.newPullParser();
+                xpp.setInput( in  , "UTF-8");
 
-                JSONObject theDocument = new JSONObject( text );
+                String description = null;
+                String newsTitle1 = null;
+                String newsDate =null;
+                String urlLink =null;
+                String imageLink = null;
+
+                Bitmap newsImage = null;
+
+                while (xpp.next() !=XmlPullParser.END_DOCUMENT)
+                {
+                    switch (xpp.getEventType())
+                    {
+                        case XmlPullParser.START_TAG:
+                            if (xpp.getName().equals("title"))
+                            {
+                               newsTitle1 = xpp.nextText() ;  //this gets the news title
 
 
+                            }
+                            else if (xpp.getName().equals("pubDate"))
+                            {
+                                newsDate = xpp.nextText();
+                               // newsDate = xpp.getAttributeValue(null, "pubDate"); //this gets the publication date
+                               // newsImage = xpp.getAttributeValue(null, "icon"); //this gets the icon name
+                            }
+                            else if (xpp.getName().equals("link"))
+                            {
+                                urlLink = xpp.nextText() ; //this gets the news link
 
-            }catch (IOException | JSONException ioe){
+                            }
+                            else if (xpp.getName().equals("description"))
+                            {
+                                description = xpp.nextText() ; //this gets the news description
+
+                            }
+                            else if (xpp.getName ().equals("media:thumbnail"))
+                            {
+                                imageLink = xpp.getAttributeValue(null,"url");
+                                imageLink = imageLink.replace("http:","https:");
+                            }
+                            break;
+                        case XmlPullParser.END_TAG:
+
+                            break;
+                        case XmlPullParser.TEXT:
+                            break;
+                    }
+
+                    if (newsTitle1 !=null && newsDate !=null && description !=null && urlLink !=null && imageLink != null){
+
+                        //----Get image from URL
+
+                        URL imgUrl = new URL(imageLink);
+                        HttpURLConnection connection = (HttpURLConnection) imgUrl.openConnection();
+                        connection.connect();
+                        int responseCode = connection.getResponseCode();
+                        if (responseCode == 200) {
+                            newsImage = BitmapFactory.decodeStream(connection.getInputStream());
+
+                        }
+                        //--- End of gettign the image
+
+                        newsFeed thisNews = new newsFeed(newsTitle1 ,newsDate,newsImage);
+                        news.add( thisNews );
+                        newsTitle1 = null;
+                        newsDate = null;
+                        description = null;
+                        urlLink = null;
+                        imageLink = null;
+                    }
+                    //code
+                }
+
+                runOnUiThread(( ) -> {
+                    newsList.setAdapter(adt);
+                    newsList.setLayoutManager(new LinearLayoutManager(this));
+                   /*
+                    for (int x=1; x<news.size() ;x++) {
+                        adt.notifyItemInserted(news.size() - 1);
+                    }*/
+                });
+
+            }
+            catch(IOException | XmlPullParserException ioe){
                 Log.e("Connection error:", ioe.getMessage());
             }
 
+        } );
 
-        });
+        //----End of getting news feed
 
-        newsList = findViewById(R.id.myrecycler);
-        newsList.setAdapter(new RecyclerView.Adapter() {
-
-
-
-            @Override
-            public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-                return null;
-            }
-
-            @Override
-            public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
-
-            }
-
-            @Override
-            public int getItemCount() {
-                return 0;
-            }
         });
     }
 
@@ -124,7 +167,9 @@ public class NewsArticles extends AppCompatActivity {
     private class MyRowViews extends RecyclerView.ViewHolder{
         TextView newsTitle;
         TextView newsDate;
-        Image newsImage;
+        ImageView newsImage;
+
+        //Image newsImage;
         int position = -1;
 
         public MyRowViews(View itemView) {
@@ -139,7 +184,7 @@ public class NewsArticles extends AppCompatActivity {
 
                             position=getAbsoluteAdapterPosition();
 
-                            newsFeed saveNews = news.get(position); //Keep the delted message text to undo if needed
+                            newsFeed saveNews = news.get(position); //Keep the deleted message text to undo if needed
                             //news.remove(position);
                             //adt.notifyItemRemoved(position);
 
@@ -154,8 +199,9 @@ public class NewsArticles extends AppCompatActivity {
                         .create().show();
             });
 
-            newsTitle = itemView.findViewById(R.id.message);
-            newsDate  = itemView.findViewById(R.id.time);
+            newsTitle = itemView.findViewById(R.id.newstitle);
+            newsDate  = itemView.findViewById(R.id.newsdate);
+            newsImage = itemView.findViewById(R.id.imageTumb);
         }
 
         public void setPosition(int p) { position=p; }
@@ -183,18 +229,28 @@ public class NewsArticles extends AppCompatActivity {
             MyRowViews thisView = (MyRowViews)holder;
             thisView.newsTitle.setText(news.get(position).getTitle());
             thisView.newsDate.setText(news.get(position).getNewsDate());
+            thisView.newsImage.setImageBitmap(news.get(position).getNewsImage());
             thisView.setPosition(position);
         }
 
         @Override
         public int getItemCount() {
-            //Numbwer of items in array
+            //Number of items in array
             return news.size();
         }
 
+        /*
+        @Override
+        public int getItemViewType(int position) {
+            newsFeed thisRow = news.get(position);
+            return thisRow.sendOrReceive;
+        }*/
 
 
     }
+
+
+
 
     //------
 
@@ -202,9 +258,9 @@ public class NewsArticles extends AppCompatActivity {
     {
         public String title;
         public String newsDate;
-        public ImageView newsImage;
+        public Bitmap newsImage;
 
-        public newsFeed(String title, String newsDate, ImageView newsImage){
+        public newsFeed(String title, String newsDate, Bitmap newsImage){
             this.title = title;
             this.newsDate = newsDate;
             this.newsImage = newsImage;
@@ -212,9 +268,25 @@ public class NewsArticles extends AppCompatActivity {
 
         public String getTitle(){return  title;}
         public String getNewsDate(){return newsDate;}
-        public ImageView getNewsImage(){return newsImage;}
+        public Bitmap getNewsImage(){return newsImage;}
     }
+    /*
+    private class newsFeed
+    {
+        public String title;
+        public String newsDate;
+        public Bitmap newsImage;
 
+        public newsFeed(String title, String newsDate, Bitmap newsImage){
+            this.title = title;
+            this.newsDate = newsDate;
+            this.newsImage = newsImage;
+        }
 
+        public String getTitle(){return  title;}
+        public String getNewsDate(){return newsDate;}
+        public Bitmap getNewsImage(){return newsImage;}
+    }
+    */
 
 }
