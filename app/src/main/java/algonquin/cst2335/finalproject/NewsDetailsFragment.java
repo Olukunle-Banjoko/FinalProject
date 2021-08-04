@@ -45,6 +45,12 @@ public class NewsDetailsFragment extends Fragment {
             getParentFragmentManager().beginTransaction().remove(this).commit();
         });
 
+        Button addFavourite = detailsView.findViewById(R.id.addFavourites);
+        addFavourite.setOnClickListener(addClicked -> {
+            NewsArticles parentActivity = (NewsArticles)getContext();
+            parentActivity.notifyAddNewsFavourite(selectedNews,selectedPosition);
+
+        });
 
         return detailsView;
 

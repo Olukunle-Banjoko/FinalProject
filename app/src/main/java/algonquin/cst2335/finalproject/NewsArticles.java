@@ -15,6 +15,7 @@ import android.widget.TextView;
 
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -37,6 +38,7 @@ import java.util.concurrent.Executors;
 
 public class NewsArticles extends AppCompatActivity {
 
+    NewsListFragment newsFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,15 +46,11 @@ public class NewsArticles extends AppCompatActivity {
 
         setContentView(R.layout.empty_layout);
 
-        NewsListFragment newsFragment = new NewsListFragment();
+        newsFragment = new NewsListFragment();
         FragmentManager fMgr = getSupportFragmentManager();
         FragmentTransaction tx = fMgr.beginTransaction();
         tx.add(R.id.fragmentRoom, newsFragment);
         tx.commit();
-
-
-
-
     }
 
     public void userClickedNews(NewsListFragment.newsFeed newsFeed, int position) {
@@ -61,4 +59,7 @@ public class NewsArticles extends AppCompatActivity {
         getSupportFragmentManager().beginTransaction().add(R.id.fragmentRoom, ndFragment).commit();
     }
 
+    public void notifyAddNewsFavourite(NewsListFragment.newsFeed selectedNews, int selectedPosition) {
+        newsFragment.AddToFavourite(selectedNews, selectedPosition);
+    }
 }

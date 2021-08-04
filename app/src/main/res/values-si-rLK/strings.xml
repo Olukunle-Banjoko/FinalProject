@@ -2,5 +2,6 @@
 <resources>
     <string name="app_name">FinalProject</string>
     <string name="loadbutton">ලබා ගන්න</string>
+    <string name="savebutton">ප්රියතම</string>
 
 </resources>

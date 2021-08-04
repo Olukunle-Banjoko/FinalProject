@@ -9,7 +9,7 @@
         android:id="@+id/savebutton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Save"
+        android:text="Favourites"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
@@ -17,7 +17,7 @@
         android:id="@+id/loadbutton"
         android:layout_width="wrap_content"
         android:layout_height="48dp"
-        android:text="@string/loadbutton"
+        android:text=  "@string/loadbutton"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 

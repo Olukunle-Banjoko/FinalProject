@@ -1,8 +1,11 @@
 package algonquin.cst2335.finalproject;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
@@ -16,6 +19,7 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AlertDialog;
@@ -44,12 +48,14 @@ public class NewsListFragment extends Fragment {
 
     private String stringURL;
     RecyclerView newsList;
+    SQLiteDatabase db;
+    Button save;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
         View newsLayout = inflater.inflate(R.layout.newslayout, container, false);
-
+        save = newsLayout.findViewById(R.id.savebutton);
     //-----------------
 
         Button save = newsLayout.findViewById(R.id.savebutton);
@@ -57,8 +63,12 @@ public class NewsListFragment extends Fragment {
         RecyclerView newsList = newsLayout.findViewById(R.id.myrecycler);
         EditText currentRating = newsLayout.findViewById(R.id.newsRating);
 
-        //-----App Rating--------
+        //----Open Database in writerble mode
+        MyOpenHelper opener = new MyOpenHelper(getContext());
+        db = opener.getWritableDatabase();
+        //----
 
+        //-----App Rating--------
         SharedPreferences prefs = getContext().getSharedPreferences("MyData", Context.MODE_PRIVATE);
         String rating = prefs.getString("Rating", "");
 
@@ -104,7 +114,11 @@ public class NewsListFragment extends Fragment {
 
         //----End of Rating
 
+        Executor newThread = Executors.newSingleThreadExecutor();
+        //----Code for loading button
         load.setOnClickListener( (click) ->{
+
+        news.clear(); //Clear the array to load news
         //-----View Progress Bar
 
            AlertDialog dialog = new AlertDialog.Builder(getContext())
@@ -116,7 +130,7 @@ public class NewsListFragment extends Fragment {
         //---End of loading progress bar
 
             //---Getting data from news feed
-            Executor newThread = Executors.newSingleThreadExecutor();
+
 
             newThread.execute( () -> {
                 try{
@@ -193,7 +207,7 @@ public class NewsListFragment extends Fragment {
                             }
                             //--- End of gettign the image
 
-                            newsFeed thisNews = new newsFeed(newsTitle1 ,newsDate,newsImage,description,urlLink);
+                            newsFeed thisNews = new newsFeed(newsTitle1 ,newsDate,newsImage,description,urlLink,imageLink);
                             news.add( thisNews );
                             newsTitle1 = null;
                             newsDate = null;
@@ -207,10 +221,12 @@ public class NewsListFragment extends Fragment {
 
                    getActivity().runOnUiThread((  ) -> {
                         newsList.setAdapter(adt);
-                        //newsList.setLayoutManager(new LinearLayoutManager(getContext(),LinearLayoutManager.VERTICAL, false));
                         newsList.setLayoutManager(new LinearLayoutManager(getContext()));
 
+                       Toast toast = Toast.makeText(getContext(), "Click on news to view details",Toast.LENGTH_LONG);
+                       toast.show();
                     });
+
 
 
                 }
@@ -223,7 +239,67 @@ public class NewsListFragment extends Fragment {
 
             //----End of getting news feed
             dialog.hide();
-       });
+       }); //--- End of loading news (Click button)
+
+
+        //-----Code for Favourites button
+        save.setOnClickListener( (click) ->{
+
+            news.clear(); //Clear the array to load favourites
+
+            newThread.execute( () -> {
+            try{
+            Cursor results = db.rawQuery("Select * from " + MyOpenHelper.TABLE_NAME + ";", null);
+
+            int _idCol = results.getColumnIndex("_id");
+            int titleCol = results.getColumnIndex(MyOpenHelper.col_title);
+            int dateCol = results.getColumnIndex(MyOpenHelper.col_date);
+            int descCol = results.getColumnIndex(MyOpenHelper.col_desc);
+            int newsLinkCol = results.getColumnIndex(MyOpenHelper.col_newsURL);
+            int imgLinkCol = results.getColumnIndex(MyOpenHelper.col_imageURL);
+            Bitmap newsImage = null;
+
+            //load previous messages from the DB
+            while (results.moveToNext()) {
+                long id = results.getInt(_idCol);
+                String title = results.getString(titleCol);
+                String newsDate = results.getString(dateCol);
+                String newsDesc = results.getString(descCol);
+                String newsLink = results.getString(newsLinkCol);
+                String imgLink = results.getString(imgLinkCol);
+
+
+                //------Convert image URL to Bitmap
+
+                URL imgUrl = new URL(imgLink);
+                HttpURLConnection connection = (HttpURLConnection) imgUrl.openConnection();
+                connection.connect();
+                int responseCode = connection.getResponseCode();
+                if (responseCode == 200) {
+                    newsImage = BitmapFactory.decodeStream(connection.getInputStream());
+
+                }
+
+                //---End of converting Bitmap
+
+                //---Add news to the array
+                news.add(new newsFeed(title, newsDate, newsImage, newsDesc, newsLink,id,imgLink ));
+            }
+
+                getActivity().runOnUiThread((  ) -> {
+                    newsList.setAdapter(adt);
+                    newsList.setLayoutManager(new LinearLayoutManager(getContext()));
+
+                });
+
+            }
+            catch(IOException ioe){
+                Log.e("Connection error:", ioe.getMessage());
+            }
+
+            } );
+
+        }); //---End of loading favourites (Favourites button)
 
         return  newsLayout;
 
@@ -249,30 +325,6 @@ public class NewsListFragment extends Fragment {
                int position= getAbsoluteAdapterPosition();
                parentActivity.userClickedNews(news.get(position),position);
 
-
-                /*
-                AlertDialog.Builder builder = new AlertDialog.Builder( getContext());
-                builder.setMessage("Do you want to save the news:" + newsTitle.getText())
-                        .setTitle("Question")
-                        .setNegativeButton("No",(dialog, cl) ->{ })
-                        .setPositiveButton("Yes",(dialog, cl) ->{
-
-                            position=getAbsoluteAdapterPosition();
-
-                            newsFeed saveNews = news.get(position); //Keep the deleted message text to undo if needed
-                            //news.remove(position);
-                            //adt.notifyItemRemoved(position);
-
-                            Snackbar.make(newsTitle,"You saved news #" + position, Snackbar.LENGTH_LONG)
-                                    .setAction("Undo", clk -> {
-                                        //Undo the delete
-                                        news.add(position,saveNews);
-                                        adt.notifyItemInserted(position);
-                                    })
-                                    .show();
-                        })
-                        .create().show();
-                */
             });
 
             newsTitle = itemView.findViewById(R.id.newstitle);
@@ -314,15 +366,6 @@ public class NewsListFragment extends Fragment {
             //Number of items in array
             return news.size();
         }
-
-        /*
-        @Override
-        public int getItemViewType(int position) {
-            newsFeed thisRow = news.get(position);
-            return thisRow.sendOrReceive;
-        }*/
-
-
     }
 
     //------
@@ -335,21 +378,24 @@ public class NewsListFragment extends Fragment {
         public String newsDesc;
         public String newsUrl;
         public long id;
+        public String imageLink;
 
-        public newsFeed(String title, String newsDate, Bitmap newsImage, String newsDescription, String newsLink){
+        public newsFeed(String title, String newsDate, Bitmap newsImage, String newsDescription, String newsLink, String imageLink){
             this.title = title;
             this.newsDate = newsDate;
             this.newsImage = newsImage;
             this.newsDesc = newsDescription;
             this.newsUrl = newsLink;
+            this.imageLink = imageLink;
         }
 
-        public newsFeed(String title, String newsDate, Bitmap newsImage, String newsDescription, String newsLink, long id) {
+        public newsFeed(String title, String newsDate, Bitmap newsImage, String newsDescription, String newsLink, long id, String imageLink) {
             this.title = title;
             this.newsDate = newsDate;
             this.newsImage = newsImage;
             this.newsDesc = newsDescription;
             this.newsUrl = newsLink;
+            this.imageLink = imageLink;
             setId(id);
         }
 
@@ -358,6 +404,7 @@ public class NewsListFragment extends Fragment {
         public String getNewsDesc(){return newsDesc;}
         public String getNewsUrl() {return newsUrl;}
         public Bitmap getNewsImage(){return newsImage;}
+        public String getImageLink() {return imageLink;}
         public void setId(long l) {
             this.id = l;
         }
@@ -366,7 +413,43 @@ public class NewsListFragment extends Fragment {
         }
     }
 
+    public void AddToFavourite(newsFeed chosenNews, int chosenPosition) {
+        AlertDialog.Builder builder = new AlertDialog.Builder( getContext());
+        builder.setMessage("Are you sure you want to add to favourite:" + chosenNews.getTitle())
+                .setTitle("Favourite News")
+                .setNegativeButton("No",(dialog, cl) ->{ })
+                .setPositiveButton("Yes",(dialog, cl) ->{
 
+                    newsFeed savedNews = news.get(chosenPosition); //Keep the deleted news to undo if needed
+                    //news.remove(chosenPosition);
+                   // adt.notifyItemRemoved(chosenPosition);
+
+
+                    ContentValues newRow = new ContentValues();
+                    newRow.put(MyOpenHelper.col_title, chosenNews.getTitle());
+                    newRow.put(MyOpenHelper.col_date, chosenNews.getNewsDate());
+                    newRow.put(MyOpenHelper.col_desc, chosenNews.getNewsDesc());
+                    newRow.put(MyOpenHelper.col_newsURL, chosenNews.getNewsUrl());
+                    newRow.put(MyOpenHelper.col_imageURL, chosenNews.getImageLink());
+                    long newId = db.insert(MyOpenHelper.TABLE_NAME, MyOpenHelper.col_title, newRow);
+
+
+
+                    Snackbar.make(save,"You added a news to favourites", Snackbar.LENGTH_LONG)
+                            .setAction("Undo", clk -> {
+                                //Undo the save news
+                                news.remove(chosenPosition);
+                                db.delete(MyOpenHelper.TABLE_NAME, "_id=?", new String[]{
+                                        Long.toString(newId)
+                                });
+
+                            })
+                    .show();
+
+                })
+                .create().show();
+
+    }
 
 
 
