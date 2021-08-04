@@ -18,6 +18,7 @@ public class NewsDetailsFragment extends Fragment {
 
     NewsListFragment.newsFeed selectedNews;
     int selectedPosition;
+    boolean isFavourite;
 
     public NewsDetailsFragment(NewsListFragment.newsFeed news, int position){
         selectedNews = news;
@@ -45,7 +46,19 @@ public class NewsDetailsFragment extends Fragment {
             getParentFragmentManager().beginTransaction().remove(this).commit();
         });
 
+
         Button addFavourite = detailsView.findViewById(R.id.addFavourites);
+        Button deleteFavourite = detailsView.findViewById(R.id.deleteFavourites);
+
+        if (selectedNews.getFavourite()==false)
+         {
+            deleteFavourite.setVisibility(View.INVISIBLE);
+            addFavourite.setVisibility(View.VISIBLE);
+        }else{
+            addFavourite.setVisibility(View.INVISIBLE);
+            deleteFavourite.setVisibility(View.VISIBLE);
+        }
+
         addFavourite.setOnClickListener(addClicked -> {
             NewsArticles parentActivity = (NewsArticles)getContext();
             parentActivity.notifyAddNewsFavourite(selectedNews,selectedPosition);

@@ -63,7 +63,7 @@ public class NewsListFragment extends Fragment {
         RecyclerView newsList = newsLayout.findViewById(R.id.myrecycler);
         EditText currentRating = newsLayout.findViewById(R.id.newsRating);
 
-        //----Open Database in writerble mode
+        //----Open Database in writable mode
         MyOpenHelper opener = new MyOpenHelper(getContext());
         db = opener.getWritableDatabase();
         //----
@@ -115,6 +115,7 @@ public class NewsListFragment extends Fragment {
         //----End of Rating
 
         Executor newThread = Executors.newSingleThreadExecutor();
+
         //----Code for loading button
         load.setOnClickListener( (click) ->{
 
@@ -207,7 +208,7 @@ public class NewsListFragment extends Fragment {
                             }
                             //--- End of gettign the image
 
-                            newsFeed thisNews = new newsFeed(newsTitle1 ,newsDate,newsImage,description,urlLink,imageLink);
+                            newsFeed thisNews = new newsFeed(newsTitle1 ,newsDate,newsImage,description,urlLink,imageLink,false);
                             news.add( thisNews );
                             newsTitle1 = null;
                             newsDate = null;
@@ -226,7 +227,6 @@ public class NewsListFragment extends Fragment {
                        Toast toast = Toast.makeText(getContext(), "Click on news to view details",Toast.LENGTH_LONG);
                        toast.show();
                     });
-
 
 
                 }
@@ -283,14 +283,19 @@ public class NewsListFragment extends Fragment {
                 //---End of converting Bitmap
 
                 //---Add news to the array
-                news.add(new newsFeed(title, newsDate, newsImage, newsDesc, newsLink,id,imgLink ));
+                news.add(new newsFeed(title, newsDate, newsImage, newsDesc, newsLink,id,imgLink,true ));
             }
 
                 getActivity().runOnUiThread((  ) -> {
                     newsList.setAdapter(adt);
                     newsList.setLayoutManager(new LinearLayoutManager(getContext()));
 
+                    Toast toast = Toast.makeText(getContext(), "Click on news to view details",Toast.LENGTH_LONG);
+                    toast.show();
+
                 });
+
+
 
             }
             catch(IOException ioe){
@@ -379,23 +384,27 @@ public class NewsListFragment extends Fragment {
         public String newsUrl;
         public long id;
         public String imageLink;
+        public Boolean isFavourites;
 
-        public newsFeed(String title, String newsDate, Bitmap newsImage, String newsDescription, String newsLink, String imageLink){
+
+        public newsFeed(String title, String newsDate, Bitmap newsImage, String newsDescription, String newsLink, String imageLink,boolean isFavourites){
             this.title = title;
             this.newsDate = newsDate;
             this.newsImage = newsImage;
             this.newsDesc = newsDescription;
             this.newsUrl = newsLink;
             this.imageLink = imageLink;
+            this.setIsFavourites(isFavourites);
         }
 
-        public newsFeed(String title, String newsDate, Bitmap newsImage, String newsDescription, String newsLink, long id, String imageLink) {
+        public newsFeed(String title, String newsDate, Bitmap newsImage, String newsDescription, String newsLink, long id, String imageLink, boolean isFavourites) {
             this.title = title;
             this.newsDate = newsDate;
             this.newsImage = newsImage;
             this.newsDesc = newsDescription;
             this.newsUrl = newsLink;
             this.imageLink = imageLink;
+            this.setIsFavourites(isFavourites);
             setId(id);
         }
 
@@ -410,6 +419,14 @@ public class NewsListFragment extends Fragment {
         }
         public long getId() {
             return id;
+        }
+
+        public void setIsFavourites(boolean isFavou){
+            isFavourites = isFavou;
+        }
+
+        public  boolean getFavourite(){
+            return  isFavourites;
         }
     }
 
