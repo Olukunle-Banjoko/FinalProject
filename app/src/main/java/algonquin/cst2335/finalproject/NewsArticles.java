@@ -62,4 +62,9 @@ public class NewsArticles extends AppCompatActivity {
     public void notifyAddNewsFavourite(NewsListFragment.newsFeed selectedNews, int selectedPosition) {
         newsFragment.AddToFavourite(selectedNews, selectedPosition);
     }
+
+    public void deletedNewsFavourite(NewsListFragment.newsFeed selectedNews, int selectedPosition) {
+        newsFragment.deleteFavourite(selectedNews, selectedPosition);
+    }
+
 }

@@ -468,6 +468,29 @@ public class NewsListFragment extends Fragment {
 
     }
 
+    public void deleteFavourite(newsFeed chosenNews, int chosenPosition) {
+        AlertDialog.Builder builder = new AlertDialog.Builder( getContext());
+        builder.setMessage("Are you sure you want to delete this news from the favourites?" )
+                .setTitle("Delete News")
+                .setNegativeButton("No",(dialog, cl) ->{ })
+                .setPositiveButton("Yes",(dialog, cl) ->{
+
+                    newsFeed deletedNews = news.get(chosenPosition); //Keep the deleted news to undo if needed
+                    news.remove(chosenPosition);
+                    adt.notifyItemRemoved(chosenPosition);
+
+                    db.delete(MyOpenHelper.TABLE_NAME, "_id=?", new String[]{
+                            Long.toString(deletedNews.getId())
+                    });
+
+                    Toast toast = Toast.makeText(getContext(), "This news is deleted from the favourites list",Toast.LENGTH_LONG);
+                    toast.show();
+
+                })
+                .create().show();
+
+    }
+
 
 
 }

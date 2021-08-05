@@ -50,6 +50,7 @@ public class NewsDetailsFragment extends Fragment {
         Button addFavourite = detailsView.findViewById(R.id.addFavourites);
         Button deleteFavourite = detailsView.findViewById(R.id.deleteFavourites);
 
+        //--Set favourites button type based on the news type
         if (selectedNews.getFavourite()==false)
          {
             deleteFavourite.setVisibility(View.INVISIBLE);
@@ -64,6 +65,12 @@ public class NewsDetailsFragment extends Fragment {
             parentActivity.notifyAddNewsFavourite(selectedNews,selectedPosition);
 
         });
+
+        deleteFavourite.setOnClickListener(deleteClicked -> {
+            NewsArticles parentActivity = (NewsArticles)getContext();
+            parentActivity.deletedNewsFavourite(selectedNews,selectedPosition);
+        });
+
 
         return detailsView;
 
