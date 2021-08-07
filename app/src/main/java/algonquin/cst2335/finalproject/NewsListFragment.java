@@ -12,6 +12,8 @@ import android.os.Bundle;
 import android.text.InputType;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -22,7 +24,10 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -106,10 +111,8 @@ public class NewsListFragment extends Fragment {
 
             builder.show();
         }else{
-
              currentRating.setText("App Rating : " + rating + "/5");
              currentRating.setInputType(InputType.TYPE_NULL);
-
         }
 
         //----End of Rating
@@ -119,21 +122,21 @@ public class NewsListFragment extends Fragment {
         //----Code for loading button
         load.setOnClickListener( (click) ->{
 
-        news.clear(); //Clear the array to load news
         //-----View Progress Bar
-
-           AlertDialog dialog = new AlertDialog.Builder(getContext())
-                    .setTitle("Getting News Data")
-                    .setMessage("Please wait while loading news....")
-                    .setView(new ProgressBar(getContext()))
-                    .show();
+         AlertDialog dialog = new AlertDialog.Builder(getContext())
+                        .setTitle("Getting News Data")
+                        .setMessage("Please wait while loading news....")
+                        .setView(new ProgressBar(getContext()))
+                        .show();
 
         //---End of loading progress bar
 
+            news.clear(); //Clear the array to load news
+
             //---Getting data from news feed
 
-
             newThread.execute( () -> {
+
                 try{
                     stringURL ="https://www.goal.com/en/feeds/news?fmt=rss&mode=xml";
 
@@ -162,14 +165,10 @@ public class NewsListFragment extends Fragment {
                                 if (xpp.getName().equals("title"))
                                 {
                                     newsTitle1 = xpp.nextText() ;  //this gets the news title
-
-
                                 }
                                 else if (xpp.getName().equals("pubDate"))
                                 {
                                     newsDate = xpp.nextText();
-                                    // newsDate = xpp.getAttributeValue(null, "pubDate"); //this gets the publication date
-                                    // newsImage = xpp.getAttributeValue(null, "icon"); //this gets the icon name
                                 }
                                 else if (xpp.getName().equals("link"))
                                 {
@@ -216,9 +215,8 @@ public class NewsListFragment extends Fragment {
                             urlLink = null;
                             imageLink = null;
                         }
-                        //code
-                    }
 
+                    }
 
                    getActivity().runOnUiThread((  ) -> {
                         newsList.setAdapter(adt);
@@ -226,9 +224,8 @@ public class NewsListFragment extends Fragment {
 
                        Toast toast = Toast.makeText(getContext(), "Click on news to view details",Toast.LENGTH_LONG);
                        toast.show();
+                       dialog.hide();
                     });
-
-
                 }
                 catch(IOException | XmlPullParserException ioe){
                     Log.e("Connection error:", ioe.getMessage());
@@ -236,9 +233,7 @@ public class NewsListFragment extends Fragment {
 
             } );
 
-
             //----End of getting news feed
-            dialog.hide();
        }); //--- End of loading news (Click button)
 
 
@@ -310,7 +305,15 @@ public class NewsListFragment extends Fragment {
 
     }
 
+  /*
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
 
+        MenuInflater inflaterMenu = ((AppCompatActivity)getActivity()).getMenuInflater();
+        inflaterMenu.inflate(R.menu.main_activity_actions_news, menu);
+        return;
+    }
+*/
 
     //--------MyRowView
 
