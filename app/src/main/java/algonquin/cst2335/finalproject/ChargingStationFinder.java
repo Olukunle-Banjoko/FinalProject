@@ -80,7 +80,7 @@ public class ChargingStationFinder extends AppCompatActivity {
         setContentView(R.layout.activity_charging_station_finder);
         edttext = findViewById(R.id.longitude);
         edttext2 = findViewById(R.id.latitude);
-        RecyclerView recyclerView = findViewById(R.id.myrecyclerview);
+        RecyclerView recyclerView = findViewById(R.id.favrecyclerview);
         btn = findViewById(R.id.searchbtn);
         Toolbar myToolbar = findViewById(R.id.myToolbar);
         setSupportActionBar(myToolbar);

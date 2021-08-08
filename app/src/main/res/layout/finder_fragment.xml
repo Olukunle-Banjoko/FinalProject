@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/myToolbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="0dp" />
+
+    <TextView
+        android:id="@+id/info"
+        android:layout_width="match_parent"
+        android:layout_height="42dp"
+        android:text="Charging Station Information"
+        android:textSize="18sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/locinfo"
+        android:layout_width="match_parent"
+        android:layout_height="29dp"
+        android:text="Location Title"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/longinfo"
+        android:layout_width="match_parent"
+        android:layout_height="32dp"
+        android:text="Longitude"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/latinfo"
+        android:layout_width="match_parent"
+        android:layout_height="32dp"
+        android:text="Latitude"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/telinfo"
+        android:layout_width="match_parent"
+        android:layout_height="29dp"
+        android:text="Contact Telephone Number"
+        android:textStyle="bold" />
+
+    <Button
+        android:id="@+id/directioninfo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Get Direction" />
+
+    <com.google.android.gms.maps.MapView
+        android:id="@+id/mapView"
+        android:layout_width="match_parent"
+        android:layout_height="465dp" />
+
+</LinearLayout>
