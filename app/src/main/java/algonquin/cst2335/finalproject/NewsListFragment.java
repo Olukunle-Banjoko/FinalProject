@@ -14,6 +14,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -23,15 +24,17 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.annotation.NonNull;
+import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.snackbar.Snackbar;
 
 import org.xmlpull.v1.XmlPullParser;
@@ -56,6 +59,8 @@ public class NewsListFragment extends Fragment {
     SQLiteDatabase db;
     Button save;
 
+    Executor newThread = Executors.newSingleThreadExecutor();
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
@@ -67,6 +72,28 @@ public class NewsListFragment extends Fragment {
         Button load = newsLayout.findViewById(R.id.loadbutton);
         RecyclerView newsList = newsLayout.findViewById(R.id.myrecycler);
         EditText currentRating = newsLayout.findViewById(R.id.newsRating);
+        this.newsList = newsList;
+
+        //----Toolbar
+        Toolbar myToolbar = newsLayout.findViewById(R.id.toolbar);
+        ((AppCompatActivity)getActivity()).setSupportActionBar(myToolbar);
+        setHasOptionsMenu(true);
+
+        /*
+        DrawerLayout drawer = newsLayout.findViewById(R.id.drawer_layout);
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(getActivity(), drawer, myToolbar, R.string.open, R.string.close);
+        drawer.addDrawerListener(toggle);
+        toggle.syncState();
+
+        NavigationView navigationView = newsLayout.findViewById(R.id.popout_menu);
+        navigationView.setNavigationItemSelectedListener((item) -> {
+
+            onOptionsItemSelected(item);  //Call the function for the other Toolbar
+            drawer.closeDrawer(GravityCompat.START);
+            return false;
+        });
+        */
+
 
         //----Open Database in writable mode
         MyOpenHelper opener = new MyOpenHelper(getContext());
@@ -114,172 +141,109 @@ public class NewsListFragment extends Fragment {
              currentRating.setText("App Rating : " + rating + "/5");
              currentRating.setInputType(InputType.TYPE_NULL);
         }
-
         //----End of Rating
-
-        Executor newThread = Executors.newSingleThreadExecutor();
 
         //----Code for loading button
         load.setOnClickListener( (click) ->{
+            loadSoccerNews(newsList);
 
-        //-----View Progress Bar
-         AlertDialog dialog = new AlertDialog.Builder(getContext())
-                        .setTitle("Getting News Data")
-                        .setMessage("Please wait while loading news....")
-                        .setView(new ProgressBar(getContext()))
-                        .show();
-
-        //---End of loading progress bar
-
-            news.clear(); //Clear the array to load news
-
-            //---Getting data from news feed
-
-            newThread.execute( () -> {
-
-                try{
-                    stringURL ="https://www.goal.com/en/feeds/news?fmt=rss&mode=xml";
-
-                    URL url = new URL(stringURL);
-                    HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
-                    InputStream in = new BufferedInputStream(urlConnection.getInputStream());
-
-                    XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
-                    factory.setNamespaceAware(false);
-                    XmlPullParser xpp = factory.newPullParser();
-                    xpp.setInput( in  , "UTF-8");
-
-                    String description = null;
-                    String newsTitle1 = null;
-                    String newsDate =null;
-                    String urlLink =null;
-                    String imageLink = null;
-
-                    Bitmap newsImage = null;
-
-                    while (xpp.next() !=XmlPullParser.END_DOCUMENT)
-                    {
-                        switch (xpp.getEventType())
-                        {
-                            case XmlPullParser.START_TAG:
-                                if (xpp.getName().equals("title"))
-                                {
-                                    newsTitle1 = xpp.nextText() ;  //this gets the news title
-                                }
-                                else if (xpp.getName().equals("pubDate"))
-                                {
-                                    newsDate = xpp.nextText();
-                                }
-                                else if (xpp.getName().equals("link"))
-                                {
-                                    urlLink = xpp.nextText() ; //this gets the news link
-
-                                }
-                                else if (xpp.getName().equals("description"))
-                                {
-                                    description = xpp.nextText() ; //this gets the news description
-
-                                }
-                                else if (xpp.getName ().equals("media:thumbnail"))
-                                {
-                                    imageLink = xpp.getAttributeValue(null,"url");
-                                    imageLink = imageLink.replace("http:","https:");
-                                }
-                                break;
-                            case XmlPullParser.END_TAG:
-
-                                break;
-                            case XmlPullParser.TEXT:
-                                break;
-                        }
-
-                        if (newsTitle1 !=null && newsDate !=null && description !=null && urlLink !=null && imageLink != null){
-
-                            //----Get image from URL
-
-                            URL imgUrl = new URL(imageLink);
-                            HttpURLConnection connection = (HttpURLConnection) imgUrl.openConnection();
-                            connection.connect();
-                            int responseCode = connection.getResponseCode();
-                            if (responseCode == 200) {
-                                newsImage = BitmapFactory.decodeStream(connection.getInputStream());
-
-                            }
-                            //--- End of gettign the image
-
-                            newsFeed thisNews = new newsFeed(newsTitle1 ,newsDate,newsImage,description,urlLink,imageLink,false);
-                            news.add( thisNews );
-                            newsTitle1 = null;
-                            newsDate = null;
-                            description = null;
-                            urlLink = null;
-                            imageLink = null;
-                        }
-
-                    }
-
-                   getActivity().runOnUiThread((  ) -> {
-                        newsList.setAdapter(adt);
-                        newsList.setLayoutManager(new LinearLayoutManager(getContext()));
-
-                       Toast toast = Toast.makeText(getContext(), "Click on news to view details",Toast.LENGTH_LONG);
-                       toast.show();
-                       dialog.hide();
-                    });
-                }
-                catch(IOException | XmlPullParserException ioe){
-                    Log.e("Connection error:", ioe.getMessage());
-                }
-
-            } );
-
-            //----End of getting news feed
        }); //--- End of loading news (Click button)
 
 
         //-----Code for Favourites button
         save.setOnClickListener( (click) ->{
+            loadFavourites(newsList);
 
-            news.clear(); //Clear the array to load favourites
+        }); //---End of loading favourites (Favourites button)
 
-            newThread.execute( () -> {
+        return  newsLayout;
+
+    }
+
+
+
+
+
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+       // inflater.inflate(R.menu.main_activity_actions_news, menu);
+        //super.onCreateOptionsMenu(menu,inflater);
+        inflater = getActivity().getMenuInflater();
+        inflater.inflate(R.menu.main_activity_actions_news, menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+
+        switch (item.getItemId())
+        {
+            case R.id.id_loadnews:
+                loadSoccerNews(newsList);
+                break;
+            case R.id.id_favourites:
+                loadFavourites(newsList);
+                break;
+            case R.id.id_help:
+                viewHelp();
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    private void viewHelp() {
+        AlertDialog.Builder builder = new AlertDialog.Builder( getContext());
+        builder.setMessage("Click on load news to get the live news updates \n " +
+                "Click on Favourites to view the saved news \n Click on any news to view more details ")
+                .setTitle("Help")
+                .setPositiveButton("Ok",(dialog, cl) ->{
+
+                })
+                .create().show();
+
+    }
+
+    private void loadFavourites(RecyclerView newsList) {
+
+        news.clear(); //Clear the array to load favourites
+
+        newThread.execute( () -> {
             try{
-            Cursor results = db.rawQuery("Select * from " + MyOpenHelper.TABLE_NAME + ";", null);
+                Cursor results = db.rawQuery("Select * from " + MyOpenHelper.TABLE_NAME + ";", null);
 
-            int _idCol = results.getColumnIndex("_id");
-            int titleCol = results.getColumnIndex(MyOpenHelper.col_title);
-            int dateCol = results.getColumnIndex(MyOpenHelper.col_date);
-            int descCol = results.getColumnIndex(MyOpenHelper.col_desc);
-            int newsLinkCol = results.getColumnIndex(MyOpenHelper.col_newsURL);
-            int imgLinkCol = results.getColumnIndex(MyOpenHelper.col_imageURL);
-            Bitmap newsImage = null;
+                int _idCol = results.getColumnIndex("_id");
+                int titleCol = results.getColumnIndex(MyOpenHelper.col_title);
+                int dateCol = results.getColumnIndex(MyOpenHelper.col_date);
+                int descCol = results.getColumnIndex(MyOpenHelper.col_desc);
+                int newsLinkCol = results.getColumnIndex(MyOpenHelper.col_newsURL);
+                int imgLinkCol = results.getColumnIndex(MyOpenHelper.col_imageURL);
+                Bitmap newsImage = null;
 
-            //load previous messages from the DB
-            while (results.moveToNext()) {
-                long id = results.getInt(_idCol);
-                String title = results.getString(titleCol);
-                String newsDate = results.getString(dateCol);
-                String newsDesc = results.getString(descCol);
-                String newsLink = results.getString(newsLinkCol);
-                String imgLink = results.getString(imgLinkCol);
+                //load previous messages from the DB
+                while (results.moveToNext()) {
+                    long id = results.getInt(_idCol);
+                    String title = results.getString(titleCol);
+                    String newsDate = results.getString(dateCol);
+                    String newsDesc = results.getString(descCol);
+                    String newsLink = results.getString(newsLinkCol);
+                    String imgLink = results.getString(imgLinkCol);
 
 
-                //------Convert image URL to Bitmap
+                    //------Convert image URL to Bitmap
 
-                URL imgUrl = new URL(imgLink);
-                HttpURLConnection connection = (HttpURLConnection) imgUrl.openConnection();
-                connection.connect();
-                int responseCode = connection.getResponseCode();
-                if (responseCode == 200) {
-                    newsImage = BitmapFactory.decodeStream(connection.getInputStream());
+                    URL imgUrl = new URL(imgLink);
+                    HttpURLConnection connection = (HttpURLConnection) imgUrl.openConnection();
+                    connection.connect();
+                    int responseCode = connection.getResponseCode();
+                    if (responseCode == 200) {
+                        newsImage = BitmapFactory.decodeStream(connection.getInputStream());
 
+                    }
+
+                    //---End of converting Bitmap
+
+                    //---Add news to the array
+                    news.add(new newsFeed(title, newsDate, newsImage, newsDesc, newsLink,id,imgLink,true ));
                 }
-
-                //---End of converting Bitmap
-
-                //---Add news to the array
-                news.add(new newsFeed(title, newsDate, newsImage, newsDesc, newsLink,id,imgLink,true ));
-            }
 
                 getActivity().runOnUiThread((  ) -> {
                     newsList.setAdapter(adt);
@@ -297,23 +261,126 @@ public class NewsListFragment extends Fragment {
                 Log.e("Connection error:", ioe.getMessage());
             }
 
-            } );
-
-        }); //---End of loading favourites (Favourites button)
-
-        return  newsLayout;
+        } );
 
     }
 
-  /*
-    @Override
-    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+    private void loadSoccerNews(RecyclerView newsList) {
+        //-----View Progress Bar
+        AlertDialog dialog = new AlertDialog.Builder(getContext())
+                .setTitle("Getting News Data")
+                .setMessage("Please wait while loading news....")
+                .setView(new ProgressBar(getContext()))
+                .show();
 
-        MenuInflater inflaterMenu = ((AppCompatActivity)getActivity()).getMenuInflater();
-        inflaterMenu.inflate(R.menu.main_activity_actions_news, menu);
-        return;
+        //---End of loading progress bar
+
+        news.clear(); //Clear the array to load news
+
+        //---Getting data from news feed
+
+        newThread.execute( () -> {
+
+            try{
+                stringURL ="https://www.goal.com/en/feeds/news?fmt=rss&mode=xml";
+
+                URL url = new URL(stringURL);
+                HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
+                InputStream in = new BufferedInputStream(urlConnection.getInputStream());
+
+                XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
+                factory.setNamespaceAware(false);
+                XmlPullParser xpp = factory.newPullParser();
+                xpp.setInput( in  , "UTF-8");
+
+                String description = null;
+                String newsTitle1 = null;
+                String newsDate =null;
+                String urlLink =null;
+                String imageLink = null;
+
+                Bitmap newsImage = null;
+
+                while (xpp.next() !=XmlPullParser.END_DOCUMENT)
+                {
+                    switch (xpp.getEventType())
+                    {
+                        case XmlPullParser.START_TAG:
+                            if (xpp.getName().equals("title"))
+                            {
+                                newsTitle1 = xpp.nextText() ;  //this gets the news title
+                            }
+                            else if (xpp.getName().equals("pubDate"))
+                            {
+                                newsDate = xpp.nextText();
+                            }
+                            else if (xpp.getName().equals("link"))
+                            {
+                                urlLink = xpp.nextText() ; //this gets the news link
+
+                            }
+                            else if (xpp.getName().equals("description"))
+                            {
+                                description = xpp.nextText() ; //this gets the news description
+
+                            }
+                            else if (xpp.getName ().equals("media:thumbnail"))
+                            {
+                                imageLink = xpp.getAttributeValue(null,"url");
+                                imageLink = imageLink.replace("http:","https:");
+                            }
+                            break;
+                        case XmlPullParser.END_TAG:
+
+                            break;
+                        case XmlPullParser.TEXT:
+                            break;
+                    }
+
+                    if (newsTitle1 !=null && newsDate !=null && description !=null && urlLink !=null && imageLink != null){
+
+                        //----Get image from URL
+
+                        URL imgUrl = new URL(imageLink);
+                        HttpURLConnection connection = (HttpURLConnection) imgUrl.openConnection();
+                        connection.connect();
+                        int responseCode = connection.getResponseCode();
+                        if (responseCode == 200) {
+                            newsImage = BitmapFactory.decodeStream(connection.getInputStream());
+
+                        }
+                        //--- End of gettign the image
+
+                        newsFeed thisNews = new newsFeed(newsTitle1 ,newsDate,newsImage,description,urlLink,imageLink,false);
+                        news.add( thisNews );
+                        newsTitle1 = null;
+                        newsDate = null;
+                        description = null;
+                        urlLink = null;
+                        imageLink = null;
+                    }
+
+                }
+
+                getActivity().runOnUiThread((  ) -> {
+                    newsList.setAdapter(adt);
+                    newsList.setLayoutManager(new LinearLayoutManager(getContext()));
+
+                    Toast toast = Toast.makeText(getContext(), "Click on news to view details",Toast.LENGTH_LONG);
+                    toast.show();
+                    dialog.hide();
+                });
+            }
+            catch(IOException | XmlPullParserException ioe){
+                Log.e("Connection error:", ioe.getMessage());
+            }
+
+        } );
+
+        //----End of getting news feed
+
+
     }
-*/
 
     //--------MyRowView
 

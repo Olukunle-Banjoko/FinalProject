@@ -3,8 +3,18 @@
     xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item
-        android:id="@+id/hide_news"
-        android:icon="@drawable/clear"
-        android:title="Favourites"
+        android:id="@+id/id_help"
+        android:icon="@drawable/newshelp"
+        android:title="Help"
+        app:showAsAction="always" />
+    <item
+        android:id="@+id/id_favourites"
+        android:icon="@drawable/newsfavourites"
+        android:title="View Favourites"
+        app:showAsAction="always" />
+    <item
+        android:id="@+id/id_loadnews"
+        android:icon="@drawable/soccer"
+        android:title="Load News"
         app:showAsAction="always" />
 </menu>

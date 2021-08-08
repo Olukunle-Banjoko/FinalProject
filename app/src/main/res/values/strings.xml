@@ -2,5 +2,7 @@
     <string name="app_name">FinalProject</string>
     <string name="loadbutton">Load News</string>
     <string name="savebutton">Favourites</string>
+    <string name="open">open_menu</string>
+    <string name="close">close_menu</string>
 
 </resources>

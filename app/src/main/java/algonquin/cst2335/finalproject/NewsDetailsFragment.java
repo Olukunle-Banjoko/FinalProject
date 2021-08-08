@@ -1,5 +1,7 @@
 package algonquin.cst2335.finalproject;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -66,11 +68,23 @@ public class NewsDetailsFragment extends Fragment {
 
         });
 
+        //----Delete from favourites
         deleteFavourite.setOnClickListener(deleteClicked -> {
             NewsArticles parentActivity = (NewsArticles)getContext();
             parentActivity.deletedNewsFavourite(selectedNews,selectedPosition);
         });
 
+        //---View URL in browser
+        Button viewBrowser = detailsView.findViewById(R.id.viewBrowser);
+
+        viewBrowser.setOnClickListener(viewClicked -> {
+
+            String url = newsLink.getText().toString();
+            Uri uri = Uri.parse(url);
+            Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+            startActivity(intent);
+
+        });
 
         return detailsView;
 
