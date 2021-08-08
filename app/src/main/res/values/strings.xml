@@ -3,7 +3,7 @@
     <string name="loadbutton">Load News</string>
     <string name="savebutton">Favourites</string>
     <string name="viewBrowser">View in Browser</string>
-    <string name="closeButton">close_menu</string>
+    <string name="closeButton">Close</string>
     <string name="addFavourites">Add to Favourites</string>
     <string name="deleteFavourites">Delete from Favourites</string>
 </resources>
