@@ -3,5 +3,8 @@
     <string name="app_name">FinalProject</string>
     <string name="loadbutton">ලබා ගන්න</string>
     <string name="savebutton">ප්රියතම</string>
-
+    <string name="viewBrowser">විවෘත</string>
+    <string name="closeButton">වසන්න</string>
+    <string name="addFavourites">එකතු කරන්න</string>
+    <string name="deleteFavourites">මකන්න</string>
 </resources>

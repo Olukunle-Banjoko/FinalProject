@@ -2,7 +2,8 @@
     <string name="app_name">FinalProject</string>
     <string name="loadbutton">Load News</string>
     <string name="savebutton">Favourites</string>
-    <string name="open">open_menu</string>
-    <string name="close">close_menu</string>
-
+    <string name="viewBrowser">View in Browser</string>
+    <string name="closeButton">close_menu</string>
+    <string name="addFavourites">Add to Favourites</string>
+    <string name="deleteFavourites">Delete from Favourites</string>
 </resources>
