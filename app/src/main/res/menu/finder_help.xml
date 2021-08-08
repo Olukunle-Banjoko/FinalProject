@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/help"
+        android:icon="@android:drawable/ic_menu_help"
+        android:title="Help "
+        app:showAsAction="always" />
+    <item
+        android:id="@+id/finder_menu"
+        android:icon="@drawable/station"
+        android:title="Charging Station Finder"
+        app:showAsAction="always" />
+    <item
+        android:id="@+id/favorites"
+        android:icon="@drawable/favorites_filled"
+        android:title="favorites"
+        app:showAsAction="always" />
+</menu>
