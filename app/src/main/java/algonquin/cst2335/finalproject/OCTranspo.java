@@ -1,3 +1,8 @@
+/** OC Transpo App
+ * @Author Cody Varrette
+ * @Version August 13th, 2021
+ */
+
 package algonquin.cst2335.finalproject;
 
 import android.app.AlertDialog;
@@ -45,9 +50,11 @@ public class OCTranspo extends AppCompatActivity {
     ArrayList<busInfo> busses = new ArrayList<>();
     MyChatAdapter adt = new MyChatAdapter();
 
+    /** These string values build the URLS used to create JSON Files */
     String stringURL;
     String stringURL2;
 
+    /** Declarations for the JSON Objects taken from the API */
     JSONObject tripDest;
     JSONObject latit;
     JSONObject longi;
@@ -132,6 +139,9 @@ public class OCTranspo extends AppCompatActivity {
         });
     }
 
+    /** This class contains everything within the recycler view
+     *  makes use of the textviews from the busrouteinfo.xml class
+     */
     private class MyRowViews extends RecyclerView.ViewHolder{
 
         TextView numberText;
@@ -185,6 +195,13 @@ public class OCTranspo extends AppCompatActivity {
         public void setPosition(int p) { position = p; }
     }
 
+    /** This class is responsible for controlling the MyRowView class and will signal it to redraw
+     * everytime a new object is added, removed, or replaced.
+     *
+     * @Param position , where in the array the object is stored
+     * @Returns instances of MyRowViews each time it is changed
+     * @Returns The array size of busses
+     */
     private class MyChatAdapter extends RecyclerView.Adapter<MyRowViews> {
         @Override
         public MyRowViews onCreateViewHolder(ViewGroup parent, int viewType) {
@@ -210,6 +227,17 @@ public class OCTranspo extends AppCompatActivity {
         }
     }
 
+    /** This class contains all the variables to be returned to the user after parsing the JSON File
+     *
+     * @Return stopNum , the stop number the user searched for
+     * @Return busNum , the bus number the user searched for
+     * @Return destination, where the bus is going
+     * @Return latitude , the latitude of the bus
+     * @Return longitude , the longitude of the bus
+     * @Return speed , the gps speed of the bus
+     * @Return time , the trip start time
+     * @Return schedule , how late or early the bus is going to be
+     */
     private class busInfo {
         String stopNum;
         String busNum;
