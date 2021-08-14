@@ -5,4 +5,6 @@
     <string name="delete">Click to Remove</string>
     <string name="enterbusstopnumber">Enter Bus Stop Number</string>
     <string name="enterbusnumber">Enter Bus Number</string>
+    <string name="menu">Main Menu</string>
+    <string name="help">Help</string>
 </resources>

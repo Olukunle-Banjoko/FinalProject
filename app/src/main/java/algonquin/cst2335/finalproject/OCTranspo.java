@@ -1,6 +1,8 @@
 package algonquin.cst2335.finalproject;
 
 import android.app.AlertDialog;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -64,8 +66,22 @@ public class OCTranspo extends AppCompatActivity {
         busList.setLayoutManager(new LinearLayoutManager(this));
 
         Button enterButton = findViewById(R.id.search_button);
+        Button menuButton = findViewById(R.id.menuButton);
+        Button helpButton = findViewById(R.id.helpButton);
         EditText enterStop = findViewById(R.id.busRouteNumber);
         EditText enterBus = findViewById(R.id.busNumber);
+
+        menuButton.setOnClickListener( clk -> {
+            Intent nextPage = new Intent (OCTranspo.this, MainActivity.class);
+            startActivity(nextPage);
+        });
+
+        helpButton.setOnClickListener( clk -> {
+            AlertDialog.Builder helpAlert = new AlertDialog.Builder(this);
+            helpAlert.setMessage("Enter Bus Number and Stop Number to view schedule information about the chosen route");
+            helpAlert.setNeutralButton("OK", (arg0, arg1) -> finish());
+            helpAlert.show();
+        });
 
         enterButton.setOnClickListener( clk -> {
             Executor newThread = Executors.newSingleThreadExecutor();
@@ -110,7 +126,7 @@ public class OCTranspo extends AppCompatActivity {
                 }
             });
 
-            busInfo thisRoute = new busInfo(enterStop.getText().toString(), "destination" , "lat", "long", "gps", "start", "sch");
+            busInfo thisRoute = new busInfo("Stop Number: " + enterStop.getText().toString(), "Bus Number: " + enterBus.getText().toString(), "destination" , "lat", "long", "gps", "start", "sch");
             busses.add(thisRoute);
             adt.notifyItemInserted(busses.size()-1);
         });
@@ -119,6 +135,7 @@ public class OCTranspo extends AppCompatActivity {
     private class MyRowViews extends RecyclerView.ViewHolder{
 
         TextView numberText;
+        TextView busText;
         TextView destinationText;
         TextView latText;
         TextView longText;
@@ -156,6 +173,7 @@ public class OCTranspo extends AppCompatActivity {
             });
 
             numberText = itemView.findViewById(R.id.stopNumberView);
+            busText = itemView.findViewById(R.id.busNumberView);
             destinationText = itemView.findViewById(R.id.destinationView);
             latText = itemView.findViewById(R.id.latitudeView);
             longText = itemView.findViewById(R.id.longitudeView);
@@ -176,6 +194,7 @@ public class OCTranspo extends AppCompatActivity {
         @Override
         public void onBindViewHolder(MyRowViews holder, int position) {
             holder.numberText.setText(busses.get(position).getStopNum());
+            holder.busText.setText(busses.get(position).getBusNum());
             holder.destinationText.setText(busses.get(position).getDestination());
             holder.latText.setText(busses.get(position).getLatitude());
             holder.longText.setText(busses.get(position).getLongitude());
@@ -193,6 +212,7 @@ public class OCTranspo extends AppCompatActivity {
 
     private class busInfo {
         String stopNum;
+        String busNum;
         String destination;
         String latitude;
         String longitude;
@@ -200,8 +220,9 @@ public class OCTranspo extends AppCompatActivity {
         String time;
         String schedule;
 
-        public busInfo(String stopNum, String destination, String latitude, String longitude, String speed, String time, String schedule) {
+        public busInfo(String stopNum, String busNum, String destination, String latitude, String longitude, String speed, String time, String schedule) {
             this.stopNum = stopNum;
+            this.busNum = busNum;
             this.destination = destination;
             this.latitude = latitude;
             this.longitude = longitude;
@@ -212,6 +233,10 @@ public class OCTranspo extends AppCompatActivity {
 
         public String getStopNum() {
             return stopNum;
+        }
+
+        public String getBusNum() {
+            return busNum;
         }
 
         public String getDestination() {
